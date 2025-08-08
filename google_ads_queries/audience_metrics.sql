@@ -33,8 +33,7 @@ SELECT
   ad_group_criterion.resource_name AS audience_resource_name,
   ad_group_criterion.criterion_id AS criterion_id,
   ad_group_criterion.type AS audience_type,
-  ad_group_criterion.display_name AS audience_name,
-  ad_group_criterion.user_list.type AS audience_user_list_type
+  ad_group_criterion.display_name AS audience_name
 FROM
   ad_group_audience_view
 WHERE

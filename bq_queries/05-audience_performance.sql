@@ -38,6 +38,7 @@ AS (
         AM.roas,
         AM.audience_name,
         AM.audience_type,
+        UL.user_list_type,
         OCID.ocid
       FROM
         `{bq_dataset}.audience_metrics` AS AM
@@ -46,6 +47,8 @@ AS (
         LEFT JOIN `{bq_dataset}.campaign_settings` AS CS
           ON CS.account_id = AGA.account_id
           AND CS.campaign_id = AGA.campaign_id
+        LEFT JOIN `{bq_dataset}.user_lists` AS UL
+          ON AM.audience_resource_name = UL.ad_group_criterion_resource_name
         INNER JOIN `{bq_dataset}.ocid_mapping` AS OCID
           ON OCID.customer_id = AGA.account_id
   )
@@ -74,5 +77,6 @@ AS (
     date,
     audience_name,
     audience_type,
+    audience_user_list_type,
     ocid
 );

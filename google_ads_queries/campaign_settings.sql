@@ -20,6 +20,8 @@ SELECT
   customer.descriptive_name AS account_name,
   campaign.id AS campaign_id,
   campaign.name AS campaign_name,
+  campaign.primary_status,
+  campaign.primary_status_reasons,
   campaign.shopping_setting.disable_product_feed AS shopping_disable_product_feed,
   campaign.shopping_setting.merchant_id AS shopping_merchant_id,
   campaign.bidding_strategy_type AS bidding_strategy,

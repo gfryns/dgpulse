@@ -87,6 +87,13 @@ SELECT
   C.account_name,
   C.campaign_id,
   C.campaign_name,
+  C.primary_status,
+  C.primary_status_reasons,
+  CASE
+    WHEN 'BIDDING_STRATEGY_CONSTRAINED' IN UNNEST(primary_status_reasons) THEN 'Limited by Target'
+    WHEN 'BUDGET_CONSTRAINED' IN UNNEST(primary_status_reasons) THEN 'Limited by Budget'
+    ELSE ''
+  END AS is_limited,
   C.bidding_strategy,
   C.shopping_disable_product_feed,
   C.shopping_merchant_id,
@@ -98,9 +105,6 @@ SELECT
   OCID.ocid,
   CE.change_count_by_date,
   IF(CWL.campaign_id IS NOT NULL, 'YES', 'NO')
-    AS has_lookalike_audience,
-  IF(C.bidding_strategy_system_status = 'LIMITED_BY_BUDGET', 'YES', 'NO')
-    AS is_limited_by_budget
 FROM
   `{bq_dataset}.campaign_settings` AS C
   LEFT JOIN targets AS T

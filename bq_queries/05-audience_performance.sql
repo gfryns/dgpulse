@@ -28,6 +28,7 @@ AS (
         CS.account_id,
         CS.campaign_id AS campaign_id,
         CS.campaign_name AS campaign_name,
+        CS.bidding_strategy AS bidding_strategy,
         AM.date,
         AM.impressions,
         AM.clicks,
@@ -38,7 +39,7 @@ AS (
         AM.roas,
         AM.audience_name,
         AM.audience_type,
-        UL.user_list_type,
+        AGC.criterion_id IS NOT NULL AS is_lookalike_audience,
         OCID.ocid
       FROM
         `{bq_dataset}.audience_metrics` AS AM
@@ -47,8 +48,8 @@ AS (
         LEFT JOIN `{bq_dataset}.campaign_settings` AS CS
           ON CS.account_id = AGA.account_id
           AND CS.campaign_id = AGA.campaign_id
-        LEFT JOIN `{bq_dataset}.user_lists` AS UL
-          ON AM.audience_resource_name = UL.ad_group_criterion_resource_name
+        LEFT JOIN `{bq_dataset}.ad_group_criterion` AS AGC
+          ON AM.audience_resource_name = AGC.ad_group_criterion_resource_name
         INNER JOIN `{bq_dataset}.ocid_mapping` AS OCID
           ON OCID.customer_id = AGA.account_id
   )
@@ -57,9 +58,11 @@ AS (
     account_id,
     campaign_id,
     campaign_name,
+    bidding_strategy,
     date,
     audience_name,
     audience_type,
+    is_lookalike_audience,
     ocid,
     SUM(impressions) AS impressions,
     SUM(clicks) AS clicks,
@@ -67,16 +70,17 @@ AS (
     SUM(conversions) AS conversions,
     SUM(conversions_value) AS conversions_value,
     SUM(vt_conversions) AS vt_conversions,
-    SUM(roas) AS roas
+    SAFE_DIVIDE(SUM(conversions_value), SUM(cost)) AS roas
   FROM AudPerf
   GROUP BY
     account_name,
     account_id,
     campaign_id,
     campaign_name,
+    bidding_strategy,
     date,
     audience_name,
     audience_type,
-    audience_user_list_type,
+    is_lookalike_audience,
     ocid
 );

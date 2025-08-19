@@ -104,7 +104,7 @@ SELECT
   C.conversions,
   OCID.ocid,
   CE.change_count_by_date,
-  IF(CWL.campaign_id IS NOT NULL, 'YES', 'NO')
+  IF(CWL.campaign_id IS NOT NULL, 'YES', 'NO') AS has_lookalike
 FROM
   `{bq_dataset}.campaign_settings` AS C
   LEFT JOIN targets AS T

@@ -19,7 +19,7 @@ data from Google Ads API and store in a BQ Table.
 
 SELECT
   ad_group_ad.ad.id AS aga_id,
-  ad_group.name AS ag_name,
+  ad_group.optimized_targeting_enabled AS uses_optimized_targeting,
   ad_group_ad.ad.type AS aga_type,
   ad_group_ad.ad.demand_gen_multi_asset_ad.portrait_marketing_images:asset AS dmaa_portrait_mkt_imgs,
   ad_group_ad.ad.demand_gen_multi_asset_ad.square_marketing_images:asset AS dmaa_square_mkt_imgs,
@@ -34,8 +34,9 @@ SELECT
   ad_group_ad.ad.demand_gen_video_responsive_ad.headlines AS dvra_headlines,
   customer.id AS account_id,
   campaign.id AS campaign_id,
+  campaign.name AS campaign_name,
   ad_group.id AS ag_id,
-  campaign.name AS campaign_name
+  ad_group.name AS ag_name
 FROM
   ad_group_ad
 WHERE

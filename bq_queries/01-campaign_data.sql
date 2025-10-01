@@ -95,6 +95,7 @@ SELECT
     ELSE ''
   END AS is_limited,
   C.bidding_strategy,
+  c.bidding_strategy_system_status,
   C.shopping_disable_product_feed,
   C.shopping_merchant_id,
   ((C.budget_amount / 1e6) / ER.rate) AS budget_amount,

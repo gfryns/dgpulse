@@ -19,12 +19,14 @@
  @param {bq_dataset} to be replaced by the answers.json's respective value (e.g.:dgpulse).
  */
 CREATE
-OR REPLACE TABLE `{bq_dataset}_bq.campaigns_assets_count` AS (
+OR REPLACE VIEW `{bq_dataset}_bq.campaigns_assets_count_view` AS (
   WITH AdGroupAd AS (
     SELECT
       campaign_id,
       campaign_name,
       account_id,
+      ag_id,
+      uses_optimized_targeting,
       SUM(ARRAY_LENGTH(dmaa_descriptions)) AS dmaa_descriptions_count,
       SUM(ARRAY_LENGTH(aga_headlines)) AS aga_headlines_count,
       SUM(ARRAY_LENGTH(dmaa_square_mkt_imgs)) AS dmaa_square_mkt_imgs_count,
@@ -36,7 +38,9 @@ OR REPLACE TABLE `{bq_dataset}_bq.campaigns_assets_count` AS (
     GROUP BY
       campaign_id,
       campaign_name,
-      account_id
+      account_id,
+      ag_id,
+      uses_optimized_targeting
   ),
   OperatingCustomerId AS (
     SELECT
@@ -59,23 +63,14 @@ OR REPLACE TABLE `{bq_dataset}_bq.campaigns_assets_count` AS (
     FROM
       `{bq_dataset}_bq.campaign_data`
   ),
-  VideoAspectRatio AS (
-    SELECT
-      campaign_id,
-      IF(aspect_ratio > 1, 1, 0) AS landscape_video_count,
-      IF(aspect_ratio = 1, 1, 0) AS square_video_count,
-      IF(aspect_ratio < 1, 1, 0) AS portrait_video_count
-    FROM
-      `{bq_dataset}_bq.video_aspect_ratio`
-  ),
   VideoAspectRatioCount AS (
     SELECT
       campaign_id,
-      SUM(landscape_video_count) AS landscape_video_count,
-      SUM(square_video_count) AS square_video_count,
-      SUM(portrait_video_count) AS portrait_video_count,
-    FROM
-      VideoAspectRatio
+      COUNT(DISTINCT (IF(asset_type_inferred = 'HORIZONTAL VIDEO', asset_id, null))) AS landscape_video_count,
+      COUNT(DISTINCT (IF(asset_type_inferred = 'SQUARE VIDEO', asset_id, null))) AS square_video_count,
+      COUNT(DISTINCT (IF(asset_type_inferred = 'VERTICAL VIDEO', asset_id, null))) AS portrait_video_count,
+      COUNT(DISTINCT (IF(asset_type_inferred = 'UNKNOWN ORIENTATION', asset_id, null))) AS unknown_format_video_count  -- for debugging, should always be 0
+    FROM (SELECT DISTINCT campaign_id, asset_id, asset_type_inferred FROM `{bq_dataset}_bq.assets_performance`)
     GROUP BY
       campaign_id
   )
@@ -85,6 +80,7 @@ OR REPLACE TABLE `{bq_dataset}_bq.campaigns_assets_count` AS (
     CampaignData.account_name,
     CampaignData.has_product_feed,
     AdGroupAd.account_id AS account_id,
+    AdGroupAd.uses_optimized_targeting,
     OperatingCustomerId.ocid,
     IFNULL(AdGroupAd.dmaa_descriptions_count, 0) AS dmaa_descriptions_count,
     IFNULL(AdGroupAd.aga_headlines_count, 0) AS aga_headlines_count,

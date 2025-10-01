@@ -31,6 +31,8 @@ SELECT
     ad_group_ad_asset_view.resource_name AS asset_type_inferred,
     customer.id AS account_id,
     customer.descriptive_name AS account_name,
+    ad_group.id AS ag_id,
+    ad_group.optimized_targeting_enabled AS uses_optimized_targeting,
     asset.id,
     asset.image_asset.full_size.url AS image_url
   FROM ad_group_ad_asset_view

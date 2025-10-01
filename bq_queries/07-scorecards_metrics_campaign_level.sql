@@ -1,5 +1,23 @@
 CREATE
-OR REPLACE TABLE `{bq_dataset}_bq.scorecards_metrics_campaign_level` AS (
+OR REPLACE VIEW `{bq_dataset}_bq.scorecards_metrics_campaign_level_view` AS (
+  WITH CampaignsUsingLookalikes AS (
+    SELECT
+      account_id,
+      campaign_id,
+      MAX(is_lookalike_audience) AS uses_lookalike_audience
+    FROM `{bq_dataset}_bq.audience_performance`
+    GROUP BY 1, 2
+  ),
+  OptimizedTargetingSpend AS (
+    SELECT
+      date,
+      account_id,
+      campaign_id,
+      SUM(IF(IFNULL(uses_optimized_targeting, FALSE), cost, 0))/1e6 AS cost_optimized_targeting,
+      SUM(IF(NOT IFNULL(uses_optimized_targeting, FALSE), cost, 0))/1e6 AS cost_non_optimized_targeting
+    FROM `{bq_dataset}.adgroupad_asset_view`
+    GROUP BY date, account_id, campaign_id
+  )
   SELECT
     cd.account_id,
     cd.account_name,
@@ -28,7 +46,12 @@ OR REPLACE TABLE `{bq_dataset}_bq.scorecards_metrics_campaign_level` AS (
     ), cd.cost, 0) AS cost_campaigns_with_3_aspect_ratio_videos,
     cac.aga_headlines_count,
     cac.dmaa_descriptions_count,
-    cac.has_product_feed
+    cac.has_product_feed,
+    cl.uses_lookalike_audience,
+    ot.cost_optimized_targeting,
+    ot.cost_non_optimized_targeting
   FROM `{bq_dataset}_bq.campaign_data` AS cd
-  LEFT JOIN `{bq_dataset}_bq.campaigns_assets_count` AS cac USING (account_id, campaign_id)
+  LEFT JOIN `{bq_dataset}_bq.campaigns_assets_count_view` AS cac USING (account_id, campaign_id)
+  LEFT JOIN CampaignsUsingLookalikes AS cl USING (account_id, campaign_id)
+  LEFT JOIN OptimizedTargetingSpend AS ot USING (date, account_id, campaign_id)
 );

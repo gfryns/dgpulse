@@ -35,14 +35,21 @@ function getVideoAspectRatioCounts(assetFromAdGroupAds) {
         landscape_video_count: 0,
         square_video_count: 0,
         portrait_video_count: 0,
+        unknown_format_video_count: 0
       };
 
-    if (asset.videoAspectRatio > 1)
+    if (asset.videoAspectRatio == 0) {
+      countsByAccountCampaign[key].unknown_format_video_count++;
+    }
+    if (asset.videoAspectRatio > 1) {
       countsByAccountCampaign[key].landscape_video_count++;
-    if (asset.videoAspectRatio == 1)
+    }
+    if (asset.videoAspectRatio == 1) {
       countsByAccountCampaign[key].square_video_count++;
-    if (asset.videoAspectRatio < 1)
+    }
+    if (asset.videoAspectRatio < 1) {
       countsByAccountCampaign[key].portrait_video_count++;
+    }
   }
 
   return countsByAccountCampaign;
@@ -104,6 +111,7 @@ function setVideoCountstoCampaign(
     landscape_video_count: countsByAccountCampaign[key].landscape_video_count,
     square_video_count: countsByAccountCampaign[key].square_video_count,
     portrait_video_count: countsByAccountCampaign[key].portrait_video_count,
+    unknown_format_video_count: countsByAccountCampaign[key].unknown_format_video_count,
   };
 }
 

@@ -36,7 +36,8 @@ async function getCampaignsAssetsCount() {
             dmaa_portrait_mkt_imgs_count,
             landscape_video_count,
             square_video_count,
-            portrait_video_count
+            portrait_video_count,
+            unknown_format_video_count
         FROM \`${projectId}.${datasetId}_bq.campaigns_assets_count\``;
   return await executeQuery(query);
 }
@@ -114,12 +115,17 @@ function getUpdateQueryForAssetAspectRatio(assetFromAdGroupAdsWithVideoRatio) {
   let finalUpdateQuery = "";
   for (let i = 0; i < assetFromAdGroupAdsWithVideoRatio.length; i++) {
     const assetWithRatio = assetFromAdGroupAdsWithVideoRatio[i];
-    const assetTypeInferred
-      = assetWithRatio.videoAspectRatio == 1
-        ? "SQUARE VIDEO"
-        : assetWithRatio.videoAspectRatio > 1
-          ? "HORIZONTAL VIDEO"
-          : "VERTICAL VIDEO";
+    let assetTypeInferred;
+    if (assetWithRatio.videoAspectRatio <= 0) {
+      assetTypeInferred = 'UNKNOWN ORIENTATION';
+    } else if (assetWithRatio.videoAspectRatio == 1) {
+      assetTypeInferred = 'SQUARE VIDEO';
+    } else if (assetWithRatio.videoAspectRatio > 1) {
+      assetTypeInferred = 'HORIZONTAL VIDEO';
+    } else if (assetWithRatio.videoAspectRatio < 1) {
+      assetTypeInferred = 'VERTICAL VIDEO';
+    }
+
     finalUpdateQuery += `
             UPDATE
                 \`${projectId}.${datasetId}_bq.assets_performance\`
@@ -127,6 +133,7 @@ function getUpdateQueryForAssetAspectRatio(assetFromAdGroupAdsWithVideoRatio) {
                 asset_type_inferred = "${assetTypeInferred}"
             WHERE asset_id = ${assetWithRatio.assetId};`;
   }
+
   return finalUpdateQuery;
 }
 
